@@ -86,6 +86,6 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method Not Allowed' });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: 'Database connection failed' });
+       return res.status(500).json({ error: error.message });
   }
 };
