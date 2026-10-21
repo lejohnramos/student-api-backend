@@ -12,7 +12,7 @@ const StudentSchema = new mongoose.Schema({
   }]
 });
 
-const Student = mongoose.models.Student || mongoose.model('Student', StudentSchema);
+const Student = mongoose.models.Student || mongoose.model('Student', StudentSchema, 'daily_attendance');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
