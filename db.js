@@ -11,6 +11,7 @@ async function connectToDatabase() {
   if (!cached.promise) {
     cached.promise = mongoose.connect(process.env.MONGODB_URI, {
       bufferCommands: false,
+      dbName: 'LabAttendanceDB_Ramos',
     });
   }
   cached.conn = await cached.promise;
