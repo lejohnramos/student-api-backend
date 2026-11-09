@@ -19,7 +19,7 @@ const Student = mongoose.models.Student ||
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Cache-Control', 'no-store');     // always return fresh data
 
@@ -28,11 +28,13 @@ module.exports = async (req, res) => {
   try {
     await connectToDatabase();
 
+    // READ: list all students
     if (req.method === 'GET') {
       const students = await Student.find({}).sort({ studentName: 1 });
       return res.status(200).json(students);
     }
 
+    // CREATE a student (no id) or mark attendance (with id)
     if (req.method === 'POST') {
       const { id, status, date, studentName, subjectName, section } = req.body;
 
@@ -60,6 +62,35 @@ module.exports = async (req, res) => {
 
       await student.save();
       return res.status(200).json(student);
+    }
+
+    // UPDATE: edit a student's name, subject, or section
+    if (req.method === 'PUT') {
+      const { id, studentName, subjectName, section } = req.body;
+
+      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'Invalid id' });
+      if (!studentName || !subjectName || !section) {
+        return res.status(400).json({ error: 'studentName, subjectName and section are required' });
+      }
+
+      const updated = await Student.findByIdAndUpdate(
+        id,
+        { studentName, subjectName, section },
+        { new: true, runValidators: true }
+      );
+      if (!updated) return res.status(404).json({ error: 'Student not found' });
+      return res.status(200).json(updated);
+    }
+
+    // DELETE: remove a student (id comes from the query string: ?id=...)
+    if (req.method === 'DELETE') {
+      const id = (req.query && req.query.id) || (req.body && req.body.id);
+
+      if (!id || !mongoose.isValidObjectId(id)) return res.status(400).json({ error: 'Invalid id' });
+
+      const deleted = await Student.findByIdAndDelete(id);
+      if (!deleted) return res.status(404).json({ error: 'Student not found' });
+      return res.status(200).json({ ok: true, _id: id });
     }
 
     return res.status(405).json({ error: 'Method Not Allowed' });
